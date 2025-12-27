@@ -1,0 +1,49 @@
+---
+export const prerender = false;
+
+import { resolveTenant } from "../../lib/tenant";
+import { createClient } from "@supabase/supabase-js";
+import { marked } from "marked";
+
+const SUPABASE_URL = import.meta.env.SUPABASE_URL;
+const SUPABASE_ANON_KEY = import.meta.env.SUPABASE_ANON_KEY;
+
+const tenant = await resolveTenant(Astro.request);
+const { slug } = Astro.params;
+
+const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+  auth: { persistSession: false },
+});
+
+const { data: post } = await supabase
+  .from("posts")
+  .select("title,excerpt,content_md,published_at,created_at")
+  .eq("org_id", tenant.org_id)
+  .eq("slug", slug)
+  .eq("status", "published")
+  .maybeSingle();
+
+if (!post) {
+  return new Response("Not found", { status: 404 });
+}
+
+const html = marked.parse(post.content_md ?? "");
+---
+
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <title>{post.title}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    {post.excerpt ? <meta name="description" content={post.excerpt} /> : null}
+  </head>
+  <body style="max-width: 860px; margin: 48px auto; padding: 0 18px; font-family: system-ui; line-height: 1.65;">
+    <a href="/blog" style="opacity:.7; text-decoration:none;">← Volver</a>
+    <h1 style="margin: 14px 0 6px;">{post.title}</h1>
+    <div style="font-size: 12px; opacity: .6; margin-bottom: 22px;">
+      {post.published_at ?? post.created_at}
+    </div>
+
+    <article set:html={html}></article>
+  </body>
+</html>
