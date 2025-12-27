@@ -1,0 +1,12 @@
+{
+  "rewrites": [
+    {
+      "source": "/blog",
+      "destination": "https://seo-engine-pack-v1.vercel.app/blog"
+    },
+    {
+      "source": "/blog/:path*",
+      "destination": "https://seo-engine-pack-v1.vercel.app/blog/:path*"
+    }
+  ]
+}
