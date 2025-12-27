@@ -1,5 +1,0 @@
-User-agent: *
-Allow: /
-
-Sitemap: https://seo-engine-pack-v1-q5wd.vercel.app/sitemap.xml
-
