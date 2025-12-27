@@ -1,0 +1,85 @@
+---
+export const prerender = false;
+
+import { resolveTenant } from "../../lib/tenant";
+import { createClient } from "@supabase/supabase-js";
+
+const SUPABASE_URL = import.meta.env.SUPABASE_URL;
+const SUPABASE_ANON_KEY = import.meta.env.SUPABASE_ANON_KEY;
+
+const tenant = await resolveTenant(Astro.request);
+
+const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+  auth: { persistSession: false },
+});
+
+const { data: posts } = await supabase
+  .from("posts")
+  .select("slug,title,excerpt,published_at,created_at")
+  .eq("org_id", tenant.org_id)
+  .eq("status", "published")
+  .order("published_at", { ascending: false, nullsFirst: false })
+  .limit(50);
+---
+
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <title>Blog</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+  </head>
+  <body style="max-width: 860px; margin: 48px auto; padding: 0 18px; font-family: system-ui;">
+    <header style="margin-bottom: 28px;">
+      <div style="opacity: .7; font-size: 13px;">AI360Plus · Blog</div>
+      <h1 style="margin: 10px 0 6px;">Pensar sistemas. Construir con verdad.</h1>
+      <p style="margin: 0; opacity: .8;">Estrategia, automatización y SEO real para crecer sin humo.</p>
+    </header>
+
+    <section style="margin: 24px 0 32px; line-height: 1.5;">
+      <p>No escribimos para posicionar palabras.</p>
+      <p>Escribimos para entender cómo los sistemas crecen, cómo se rompen y cómo se vuelven a levantar.</p>
+      <p>Aquí compartimos lo que construimos, lo que funciona… y lo que no.</p>
+    </section>
+
+    <hr style="border: none; border-top: 1px solid rgba(0,0,0,.12); margin: 34px 0;" />
+
+    <h2 style="font-size: 14px; text-transform: uppercase; letter-spacing: .08em; opacity: .7;">
+      Últimos artículos
+    </h2>
+
+    <div style="display: flex; flex-direction: column; gap: 18px; margin-top: 16px;">
+      {posts?.length ? (
+        posts.map((p) => (
+          <article>
+            <a href={`/blog/${p.slug}`} style="font-size: 18px; font-weight: 700; text-decoration: none;">
+              {p.title}
+            </a>
+            {p.excerpt ? <p style="margin: 6px 0 0; opacity: .85;">{p.excerpt}</p> : null}
+            <div style="margin-top: 6px; font-size: 12px; opacity: .6;">
+              {p.published_at ?? p.created_at}
+            </div>
+          </article>
+        ))
+      ) : (
+        <p style="opacity:.7;">Aún no hay artículos publicados.</p>
+      )}
+    </div>
+
+    <hr style="border: none; border-top: 1px solid rgba(0,0,0,.12); margin: 34px 0;" />
+
+    <section style="opacity:.85;">
+      <p style="margin: 0;">
+        Parte de lo que construimos aquí se comparte con personas y proyectos que no tendrían acceso a estas herramientas de otro modo.
+      </p>
+      <p style="margin: 10px 0 0;">
+        No como marketing. Como responsabilidad.
+      </p>
+    </section>
+
+    <div style="margin-top: 34px;">
+      <a href="/" style="display:inline-block; padding: 10px 14px; border: 1px solid rgba(0,0,0,.2); border-radius: 10px; text-decoration: none;">
+        Ver el sistema AI360Plus
+      </a>
+    </div>
+  </body>
+</html>
